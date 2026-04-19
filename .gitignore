@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+.env
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+
+# macOS
+.DS_Store
+
+# SQLite databases
+*.db
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+
+# Model artifacts (large binaries)
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+
+# Old sub-repo source folders (not part of monorepo)
+Monitoring_Dashboard/
+product-categorization-system/
+product-categorization-system-app/
