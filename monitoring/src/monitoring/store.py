@@ -1,11 +1,15 @@
+import os
 import sqlite3
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[2]
-DB_PATH = str(ROOT / "data" / "monitoring.db")
+# Allow the DB path to be overridden via environment variable so both
+# app/backend and monitoring can share a single SQLite file (e.g. via a
+# Docker named volume mounted at /data).
+_DEFAULT_DB_PATH = "/data/product_categorization.db"
+DB_PATH: str = os.environ.get("DB_PATH", _DEFAULT_DB_PATH)
 
 
 def init_db():

@@ -1,12 +1,17 @@
 """Database configuration and ORM models for the Smart Product Categorization System."""
 import json
+import os
 from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy import create_engine, Boolean, DateTime, Float, Integer, String, Text, ForeignKey, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker, relationship
 
-DATABASE_URL = "sqlite:///./product_categorization.db"
+# Allow DATABASE_URL to be set via environment variable so both app/backend
+# and monitoring can share a single SQLite file (e.g. via a Docker named
+# volume mounted at /data).  The local-dev fallback keeps the old behaviour.
+_DEFAULT_DB_URL = "sqlite:////data/product_categorization.db"
+DATABASE_URL: str = os.environ.get("DATABASE_URL", _DEFAULT_DB_URL)
 
 
 class Base(DeclarativeBase):

@@ -1,0 +1,63 @@
+version: "3.9"
+
+# ── Shared named volume: both backend services mount this at /data ─────────────
+volumes:
+  db_data:
+
+services:
+
+  # ── 1. App Backend (FastAPI — port 8000) ─────────────────────────────────────
+  app-backend:
+    build:
+      context: ./app/backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: "sqlite:////data/product_categorization.db"
+    volumes:
+      - db_data:/data
+    restart: unless-stopped
+
+  # ── 2. App Frontend (Next.js — port 3000) ────────────────────────────────────
+  app-frontend:
+    build:
+      context: ./app/frontend
+      dockerfile: Dockerfile
+      args:
+        # Passed at build time so it is embedded into the Next.js bundle
+        NEXT_PUBLIC_API_URL: "http://localhost:8000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - app-backend
+    restart: unless-stopped
+
+  # ── 3. Monitoring Backend (FastAPI — port 8001) ───────────────────────────────
+  monitoring-backend:
+    build:
+      context: ./monitoring
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      DB_PATH: "/data/product_categorization.db"
+    volumes:
+      - db_data:/data
+    depends_on:
+      - app-backend
+    restart: unless-stopped
+
+  # ── 4. Monitoring Frontend (Vite/React — port 5173) ──────────────────────────
+  monitoring-frontend:
+    build:
+      context: ./monitoring/frontend
+      dockerfile: Dockerfile
+      args:
+        # Vite bakes this into the bundle at build time
+        VITE_API_URL: "http://localhost:8001"
+    ports:
+      - "5173:80"
+    depends_on:
+      - monitoring-backend
+    restart: unless-stopped
