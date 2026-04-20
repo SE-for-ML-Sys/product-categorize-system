@@ -99,6 +99,18 @@ def seed_predictions(cursor: sqlite3.Cursor, start_at: datetime, hours: int, per
                 minutes=random.randint(0, 59), seconds=random.randint(0, 59)
             )
 
+            # Prevent rendering future times in the UI
+            actual_now = datetime.now(THAI_TZ).replace(tzinfo=None)
+            if ts > actual_now:
+                # Distribute randomly up to the actual current minute
+                ts = hour_start + timedelta(
+                    minutes=random.randint(0, max(0, actual_now.minute)), 
+                    seconds=random.randint(0, 59)
+                )
+
+                if ts > actual_now:
+                    ts = actual_now
+
             predicted_class = random.choices(classes, weights=[bev_w, snk_w], k=1)[0]
 
             # Keep confidence stable for most hours with occasional mild drops.

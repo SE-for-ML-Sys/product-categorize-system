@@ -3,6 +3,7 @@ import json
 import os
 from datetime import datetime
 from typing import List, Optional
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import create_engine, Boolean, DateTime, Float, Integer, String, Text, ForeignKey, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker, relationship
@@ -12,6 +13,12 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker,
 # volume mounted at /data).  The local-dev fallback keeps the old behaviour.
 _DEFAULT_DB_URL = "sqlite:////data/product_categorization.db"
 DATABASE_URL: str = os.environ.get("DATABASE_URL", _DEFAULT_DB_URL)
+THAI_TZ = ZoneInfo("Asia/Bangkok")
+
+
+def bangkok_now() -> datetime:
+    """Return the current Bangkok wall-clock time as a naive datetime."""
+    return datetime.now(THAI_TZ).replace(tzinfo=None)
 
 
 class Base(DeclarativeBase):
@@ -23,7 +30,7 @@ class PredictionEvent(Base):
     __tablename__ = "prediction_events"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=bangkok_now)
     predicted_class: Mapped[str] = mapped_column(Text, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False)
     latency_ms: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
@@ -48,7 +55,7 @@ class HumanFeedback(Base):
         Integer, ForeignKey("prediction_events.id"), nullable=False
     )
     true_label: Mapped[str] = mapped_column(Text, nullable=False)
-    labeled_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    labeled_at: Mapped[datetime] = mapped_column(DateTime, default=bangkok_now)
 
     prediction: Mapped[Optional["PredictionEvent"]] = relationship(
         "PredictionEvent", back_populates="feedback"
@@ -60,7 +67,7 @@ class DriftEvent(Base):
     __tablename__ = "drift_events"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=bangkok_now)
     embedding_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     confidence_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     class_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
@@ -75,7 +82,7 @@ class Alert(Base):
     __tablename__ = "alerts"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=bangkok_now)
     alert_type: Mapped[str] = mapped_column(Text, nullable=False)
     message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     resolved: Mapped[bool] = mapped_column(Boolean, default=False)
