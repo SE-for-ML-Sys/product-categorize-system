@@ -31,7 +31,7 @@ export const predictionApi = {
     return response.data;
   },
 
-  getHistory: async (limit = 20, offset = 0): Promise<HistoryResponse> => {
+  getHistory: async (limit = 10, offset = 0): Promise<HistoryResponse> => {
     const response = await apiClient.get<HistoryResponse>("/history", {
       params: { limit, offset },
     });

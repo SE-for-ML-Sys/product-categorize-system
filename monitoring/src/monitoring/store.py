@@ -3,6 +3,7 @@ import sqlite3
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 
 # Allow the DB path to be overridden via environment variable so both
@@ -10,6 +11,11 @@ from pathlib import Path
 # Docker named volume mounted at /data).
 _DEFAULT_DB_PATH = "/data/product_categorization.db"
 DB_PATH: str = os.environ.get("DB_PATH", _DEFAULT_DB_PATH)
+THAI_TZ = ZoneInfo("Asia/Bangkok")
+
+
+def bangkok_now_str() -> str:
+    return datetime.now(THAI_TZ).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def init_db():
@@ -73,10 +79,11 @@ def insert_prediction(predicted_class, confidence, latency_ms=None,
 
     cursor.execute("""
         INSERT INTO prediction_events (
-            predicted_class, confidence, latency_ms,
+            timestamp, predicted_class, confidence, latency_ms,
             brightness, blur_var, width, height, quality_warnings
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
+        bangkok_now_str(),
         predicted_class,
         confidence,
         latency_ms,
@@ -137,11 +144,12 @@ def insert_drift_event(embedding_score, confidence_score, class_score, is_drift,
     cursor.execute(
         """
         INSERT INTO drift_events (
-            embedding_score, confidence_score, class_score,
+            timestamp, embedding_score, confidence_score, class_score,
             is_drift, embedding_drifted, confidence_drifted, class_drifted
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
+            bangkok_now_str(),
             embedding_score,
             confidence_score,
             class_score,
@@ -157,7 +165,7 @@ def insert_drift_event(embedding_score, confidence_score, class_score, is_drift,
     return drift_id
 
 def recent_hours(n=24):
-    now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    now = datetime.now(THAI_TZ).replace(minute=0, second=0, microsecond=0)
     return [(now - timedelta(hours=i)).strftime("%Y-%m-%d %H:00") for i in reversed(range(n))]
 
 def upsert_alert(alert_type, message, dedupe_hours=1):
@@ -166,7 +174,7 @@ def upsert_alert(alert_type, message, dedupe_hours=1):
             """
             SELECT 1 FROM alerts
             WHERE alert_type = ?
-              AND timestamp >= datetime('now', ?)
+                            AND timestamp >= datetime('now', '+7 hours', ?)
             LIMIT 1
             """,
             (alert_type, f'-{dedupe_hours} hours')
@@ -176,8 +184,8 @@ def upsert_alert(alert_type, message, dedupe_hours=1):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO alerts (alert_type, message) VALUES (?, ?)",
-        (alert_type, message)
+        "INSERT INTO alerts (timestamp, alert_type, message) VALUES (?, ?, ?)",
+        (bangkok_now_str(), alert_type, message)
     )
     conn.commit()
     conn.close()

@@ -13,11 +13,14 @@ export default function Home() {
     type: "success" | "error";
   } | null>(null);
 
+  const [historyPage, setHistoryPage] = useState(0);
+  const historyLimit = 10;
+
   const {
     data: historyData,
     refetch: refetchHistory,
     isLoading: isHistoryLoading,
-  } = useHistory(20, 0);
+  } = useHistory(historyLimit, historyPage * historyLimit);
   const feedbackMutation = useFeedback();
 
   const predictionMutation = usePrediction();
@@ -303,99 +306,151 @@ export default function Home() {
           ) : history.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No predictions yet</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-600">
-                      Image
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-600">
-                      Time
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-600">
-                      Class
-                    </th>
-                    <th className="text-right py-3 px-4 font-semibold text-gray-600">
-                      Confidence
-                    </th>
-                    <th className="text-right py-3 px-4 font-semibold text-gray-600">
-                      Latency
-                    </th>
-                    <th className="text-right py-3 px-4 font-semibold text-gray-600">
-                      Brightness
-                    </th>
-                    <th className="text-right py-3 px-4 font-semibold text-gray-600">
-                      Blur Var
-                    </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-600">
-                      Warnings
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((item: HistoryItem) => (
-                    <tr
-                      key={item.id}
-                      className="border-b border-gray-100 hover:bg-gray-50"
-                    >
-                      <td className="py-3 px-4">
-                        {item.image_data_url ? (
-                          <img
-                            src={item.image_data_url}
-                            alt={`Prediction ${item.id}`}
-                            className="h-14 w-14 rounded-lg object-cover border border-gray-200"
-                          />
-                        ) : (
-                          <div className="h-14 w-14 rounded-lg border border-gray-200 bg-gray-100" />
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-gray-600">
-                        {formatTime(item.timestamp)}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            item.predicted_class === "beverage"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {item.predicted_class}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-right font-medium">
-                        {formatConfidence(item.confidence)}%
-                      </td>
-                      <td className="py-3 px-4 text-right text-gray-700">
-                        {formatLatency(item.latency_ms)}
-                      </td>
-                      <td className="py-3 px-4 text-right text-gray-700">
-                        {formatMetric(item.brightness)}
-                      </td>
-                      <td className="py-3 px-4 text-right text-gray-700">
-                        {formatMetric(item.blur_var)}
-                      </td>
-                      <td className="py-3 px-4">
-                        {item.quality_warnings.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {item.quality_warnings.map((warning) => (
-                              <span
-                                key={`${item.id}-${warning}`}
-                                className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs"
-                              >
-                                {warning.replace("_", " ")}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </td>
+            <div className="space-y-4">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-semibold text-gray-600">
+                        Image
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-600">
+                        Time
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-600">
+                        Class
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-600">
+                        Confidence
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-600">
+                        Latency
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-600">
+                        Brightness
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-600">
+                        Blur Var
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-600">
+                        Warnings
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {history.map((item: HistoryItem) => (
+                      <tr
+                        key={item.id}
+                        className="border-b border-gray-100 hover:bg-gray-50"
+                      >
+                        <td className="py-3 px-4">
+                          {item.image_data_url ? (
+                            <img
+                              src={item.image_data_url}
+                              alt={`Prediction ${item.id}`}
+                              className="h-14 w-14 rounded-lg object-cover border border-gray-200"
+                            />
+                          ) : (
+                            <div className="h-14 w-14 rounded-lg border border-gray-200 bg-gray-100" />
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {formatTime(item.timestamp)}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              item.predicted_class === "beverage"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {item.predicted_class}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right font-medium">
+                          {formatConfidence(item.confidence)}%
+                        </td>
+                        <td className="py-3 px-4 text-right text-gray-700">
+                          {formatLatency(item.latency_ms)}
+                        </td>
+                        <td className="py-3 px-4 text-right text-gray-700">
+                          {formatMetric(item.brightness)}
+                        </td>
+                        <td className="py-3 px-4 text-right text-gray-700">
+                          {formatMetric(item.blur_var)}
+                        </td>
+                        <td className="py-3 px-4">
+                          {item.quality_warnings.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {item.quality_warnings.map((warning) => (
+                                <span
+                                  key={`${item.id}-${warning}`}
+                                  className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs"
+                                >
+                                  {warning.replace("_", " ")}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-4">
+                <div className="flex flex-1 justify-between sm:hidden">
+                  <button
+                    onClick={() => setHistoryPage((p) => Math.max(0, p - 1))}
+                    disabled={historyPage === 0 || isHistoryLoading}
+                    className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setHistoryPage((p) => p + 1)}
+                    disabled={!historyData || (historyPage + 1) * historyLimit >= historyData.total || isHistoryLoading}
+                    className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400"
+                  >
+                    Next
+                  </button>
+                </div>
+                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Showing <span className="font-medium">{historyPage * historyLimit + 1}</span> to <span className="font-medium">{Math.min((historyPage + 1) * historyLimit, historyData?.total ?? 0)}</span> of <span className="font-medium">{historyData?.total ?? 0}</span> results
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                      <button
+                        onClick={() => setHistoryPage((p) => Math.max(0, p - 1))}
+                        disabled={historyPage === 0 || isHistoryLoading}
+                        className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:bg-gray-100 disabled:text-gray-300 cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        <span className="sr-only">Previous</span>
+                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setHistoryPage((p) => p + 1)}
+                        disabled={!historyData || (historyPage + 1) * historyLimit >= historyData.total || isHistoryLoading}
+                        className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:bg-gray-100 disabled:text-gray-300 cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        <span className="sr-only">Next</span>
+                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

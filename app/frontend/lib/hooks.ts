@@ -13,7 +13,7 @@ export const usePrediction = () => {
   });
 };
 
-export const useHistory = (limit = 20, offset = 0) => {
+export const useHistory = (limit = 10, offset = 0) => {
   return useQuery({
     queryKey: ["history", { limit, offset }],
     queryFn: () => predictionApi.getHistory(limit, offset),
