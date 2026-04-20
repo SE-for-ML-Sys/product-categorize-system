@@ -8,3 +8,4 @@ sqlalchemy>=2.0.25
 pydantic>=2.5.3
 python-multipart>=0.0.6
 opencv-python>=4.9.0
+packaging>=23.0

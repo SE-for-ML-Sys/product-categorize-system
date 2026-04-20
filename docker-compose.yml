@@ -5,12 +5,11 @@ volumes:
   db_data:
 
 services:
-
   # ── 1. App Backend (FastAPI — port 8000) ─────────────────────────────────────
   app-backend:
     build:
-      context: ./app/backend
-      dockerfile: Dockerfile
+      context: ./app
+      dockerfile: backend/Dockerfile
     ports:
       - "8000:8000"
     environment:
