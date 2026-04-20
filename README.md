@@ -160,10 +160,20 @@ Dashboard at <http://localhost:5173>
 
 ### Step 5 — Seed Sample Data (optional)
 
+You can seed the database with mock data to test the monitoring dashboard.
+
+**Option A: Using Docker Compose (Recommended)**
+*(Ensure `docker compose up -d` is running)*
+```bash
+docker compose exec monitoring-backend python scripts/seed_mock_data.py --reset
+```
+
+**Option B: Manual Setup (Local)**
 ```bash
 cd monitoring
 source venv/bin/activate
-python scripts/seed_mock_data.py --reset
+# Specify the path to the app's database and use python3
+DB_PATH=../app/backend/product_categorization.db python3 scripts/seed_mock_data.py --reset
 ```
 
 ---
