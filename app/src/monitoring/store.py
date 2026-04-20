@@ -2,11 +2,26 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
-DB_PATH = str(ROOT_DIR / "backend" / "product_categorization.db")
+
+
+def _default_db_path() -> str:
+    db_path = os.environ.get("DB_PATH")
+    if db_path:
+        return db_path
+
+    database_url = os.environ.get("DATABASE_URL", "")
+    if database_url.startswith("sqlite:///"):
+        return database_url.replace("sqlite:///", "", 1)
+
+    return str(ROOT_DIR / "backend" / "product_categorization.db")
+
+
+DB_PATH = _default_db_path()
 
 
 def _connect() -> sqlite3.Connection:
@@ -15,6 +30,8 @@ def _connect() -> sqlite3.Connection:
 
 def init_db() -> None:
     """Ensure monitoring tables exist."""
+    Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
+
     conn = _connect()
     conn.execute(
         """
